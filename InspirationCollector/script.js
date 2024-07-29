@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const urlInput = document.getElementById('urlInput');
     const addUrlButton = document.getElementById('addUrlButton');
-    const urlList = document.getElementById('urlList');
+    const urlGrid = document.getElementById('urlGrid');
 
     addUrlButton.addEventListener('click', addUrl);
     urlInput.addEventListener('keypress', (e) => {
@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const url = urlInput.value.trim();
         if (url) {
             const metadata = await fetchMetadata(url);
-            addUrlToList(url, metadata.title, metadata.image);
+            addUrlToGrid(url, metadata.title, metadata.image);
             urlInput.value = '';
         }
     }
@@ -27,22 +27,22 @@ document.addEventListener('DOMContentLoaded', () => {
             
             return {
                 title: data.title || 'No Title',
-                image: data.image || 'https://via.placeholder.com/100'
+                image: data.image || 'https://via.placeholder.com/150'
             };
         } catch (error) {
             console.error('Error fetching metadata:', error);
-            return { title: 'No Title', image: 'https://via.placeholder.com/100' };
+            return { title: 'No Title', image: 'https://via.placeholder.com/150' };
         }
     }
 
-    function addUrlToList(url, title, thumbnailUrl) {
-        const listItem = document.createElement('li');
-        listItem.className = 'thumbnail-item';
-        listItem.innerHTML = `
-            <img src="${thumbnailUrl}" alt="Thumbnail" class="thumbnail">
-            <div class="thumbnail-content">
-                <div class="thumbnail-title">${title}</div>
-                <div class="thumbnail-url">${url}</div>
+    function addUrlToGrid(url, title, thumbnailUrl) {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+            <img src="${thumbnailUrl}" alt="Thumbnail">
+            <div class="card-content">
+                <div class="card-title">${title}</div>
+                <div class="card-url">${url} <i class="fas fa-copy" onclick="copyToClipboard('${url}')"></i></div>
             </div>
             <button class="more-btn"><i class="fas fa-ellipsis-v"></i></button>
             <div class="dropdown">
@@ -52,11 +52,11 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
 
-        const moreBtn = listItem.querySelector('.more-btn');
-        const dropdown = listItem.querySelector('.dropdown');
-        const favoriteBtn = listItem.querySelector('.favorite-btn');
-        const editBtn = listItem.querySelector('.edit-btn');
-        const deleteBtn = listItem.querySelector('.delete-btn');
+        const moreBtn = card.querySelector('.more-btn');
+        const dropdown = card.querySelector('.dropdown');
+        const favoriteBtn = card.querySelector('.favorite-btn');
+        const editBtn = card.querySelector('.edit-btn');
+        const deleteBtn = card.querySelector('.delete-btn');
 
         moreBtn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         favoriteBtn.addEventListener('click', () => {
-            listItem.classList.toggle('favorite');
+            card.classList.toggle('favorite');
             dropdown.classList.remove('show');
         });
 
@@ -72,19 +72,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const newUrl = prompt('Enter new URL:', url);
             if (newUrl && newUrl !== url) {
                 fetchMetadata(newUrl).then(metadata => {
-                    listItem.querySelector('.thumbnail').src = metadata.image;
-                    listItem.querySelector('.thumbnail-title').textContent = metadata.title;
-                    listItem.querySelector('.thumbnail-url').textContent = newUrl;
+                    card.querySelector('img').src = metadata.image;
+                    card.querySelector('.card-title').textContent = metadata.title;
+                    card.querySelector('.card-url').innerHTML = `${newUrl} <i class="fas fa-copy" onclick="copyToClipboard('${newUrl}')"></i>`;
                 });
             }
             dropdown.classList.remove('show');
         });
 
         deleteBtn.addEventListener('click', () => {
-            listItem.remove();
+            card.remove();
         });
 
-        urlList.appendChild(listItem);
+        urlGrid.appendChild(card);
     }
 
     document.addEventListener('click', () => {
@@ -93,3 +93,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
+
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        alert('URL copied to clipboard');
+    }).catch(err => {
+        console.error('Failed to copy: ', err);
+    });
+}
